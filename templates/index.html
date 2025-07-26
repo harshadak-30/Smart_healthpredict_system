@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Healthcare System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0f7fa 0%, #fce4ec 100%);
+            min-height: 100vh;
+        }
+        .hero-img {
+            max-width: 320px;
+            border-radius: 1.5rem;
+            box-shadow: 0 6px 32px rgba(0,0,0,0.13);
+            margin-bottom: 2rem;
+            animation: float 4s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-16px); }
+        }
+        .feature-card {
+            border: none;
+            border-radius: 1.2rem;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.09);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #1976d2;
+        }
+        .btn-custom {
+            font-size: 1.1rem;
+            padding: 0.7rem 2.2rem;
+            border-radius: 2rem;
+            margin: 0.5rem 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row align-items-center mb-5">
+            <div class="col-md-6 text-center text-md-start">
+                <h1 class="display-4 fw-bold mb-3">Smart Healthcare System</h1>
+                <h4 class="mb-4 text-secondary">Your AI-powered assistant for early health risk detection and guidance.</h4>
+                <p class="lead mb-4">Empowering you to make informed decisions about your health. Use our advanced tools to predict diabetes, assess heart disease risk, check for liver disease, or chat with our symptom checker for instant advice.</p>
+                <a href="#features" class="btn btn-primary btn-lg btn-custom">Explore Features <i class="fas fa-arrow-down ms-2"></i></a>
+            </div>
+            <div class="col-md-6 text-center">
+                <img src="https://wallpapers.com/images/hd/health-pictures-lxswxnj912ggs6ky.jpg" alt="Healthcare" class="hero-img img-fluid">
+            </div>
+        </div>
+
+        <div id="features" class="row g-4 justify-content-center">
+            <div class="col-md-4">
+                <div class="card feature-card h-100 text-center p-4">
+                    <div class="feature-icon"><i class="fas fa-syringe"></i></div>
+                    <h5 class="card-title">Diabetes Prediction</h5>
+                    <p class="card-text">Predict your risk of diabetes using advanced medical models. Get personalized lifestyle tips for prevention and care.</p>
+                    <a href="/diabetes" class="btn btn-primary btn-custom">Try Now</a>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card feature-card h-100 text-center p-4">
+                    <div class="feature-icon"><i class="fas fa-heartbeat"></i></div>
+                    <h5 class="card-title">Heart Disease Prediction</h5>
+                    <p class="card-text">Assess your heart health and get early warnings. Our AI helps you understand your risk factors and stay heart-healthy.</p>
+                    <a href="/heart" class="btn btn-danger btn-custom">Try Now</a>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card feature-card h-100 text-center p-4">
+                    <div class="feature-icon"><i class="fas fa-vial"></i></div>
+                    <h5 class="card-title">Liver Disease Prediction</h5>
+                    <p class="card-text">Evaluate your liver health with accurate detection of possible liver conditions based on clinical indicators.</p>
+                    <a href="/liver" class="btn btn-warning btn-custom text-dark">Check Now</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+            <div class="card feature-card h-100 text-center p-4">
+                <div class="feature-icon"><i class="fas fa-ribbon"></i></div>
+                <h5 class="card-title">Breast Cancer Prediction</h5>
+                <p class="card-text">Detect possible signs of breast cancer based on cellular features. Powered by machine learning.</p>
+                <a href="/cancer" class="btn btn-danger btn-custom">Check Now</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+        <div class="card feature-card h-100 text-center p-4">
+            <div class="feature-icon"><i class="fas fa-brain"></i></div>
+            <h5 class="card-title">Stroke Prediction</h5>
+            <p class="card-text">Assess your risk of having a stroke based on medical indicators. Stay informed and take preventive steps early.</p>
+            <a href="/stroke" class="btn btn-info btn-custom text-white">Assess Now</a>
+        </div>
+    </div>
+
+
+            <div class="col-md-4">
+                <div class="card feature-card h-100 text-center p-4">
+                    <div class="feature-icon"><i class="fas fa-robot"></i></div>
+                    <h5 class="card-title">Symptom Chatbot</h5>
+                    <p class="card-text">Describe your symptoms and get instant AI-powered advice and suggestions. Fast, private, and always available.</p>
+                    <a href="/chatbot" class="btn btn-success btn-custom">Chat Now</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col text-center">
+                <p class="text-muted">&copy; 2025 Smart Healthcare System &mdash; Empowering Health with AI</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

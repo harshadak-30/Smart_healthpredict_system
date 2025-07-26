@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Symptom Checker Bot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9fafb;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .chat-container {
+      background: white;
+      width: 100%;
+      max-width: 600px;
+      height: 90vh;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .user {
+      align-self: flex-end;
+      background-color: #2563eb;
+      color: white;
+    }
+
+    .bot {
+      align-self: flex-start;
+      background-color: #f3f4f6;
+      color: #111827;
+    }
+
+    .input-area {
+      display: flex;
+      padding: 12px;
+      gap: 10px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 10px 14px;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .quick-symptoms {
+      padding: 12px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: #f9fafb;
+    }
+
+    .quick-symptoms button {
+      background: #f3f4f6;
+      color: #374151;
+      border-radius: 9999px;
+      font-size: 13px;
+      padding: 6px 12px;
+    }
+
+    .alert {
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      font-size: 13px;
+      padding: 10px 12px;
+      margin: 12px;
+      border-radius: 6px;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding-left: 12px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      background: #9ca3af;
+      border-radius: 50%;
+      animation: bounce 1s infinite;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chat-container">
+    <div class="chat-box" id="chat-box">
+      <div class="message bot">
+        Hello! I'm your AI health assistant. Please describe your symptoms and I'll help analyze them.
+        
+      </div>
+    </div>
+
+    <div class="quick-symptoms" id="symptom-buttons">
+      <!-- Buttons will be added by JS -->
+    </div>
+
+    <form class="input-area" onsubmit="handleSubmit(event)">
+      <input type="text" id="user-input" placeholder="Describe your symptoms..." />
+      <button type="submit">Send</button>
+    </form>
+
+    <div class="alert">
+       This tool provides general information only. Always consult a healthcare professional for medical advice.
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chat-box');
+    const input = document.getElementById('user-input');
+    const symptomsList = [
+      "Headache", "Fever", "Cough", "Sore throat", "Fatigue",
+      "Nausea", "Chest pain", "Shortness of breath", "Dizziness"
+    ];
+
+    const diseaseData = {
+      "Common Cold": ["cough", "sore throat", "runny nose", "sneezing"],
+      "Flu": ["fever", "headache", "fatigue", "body aches", "cough"],
+      "Migraine": ["headache", "nausea", "sensitivity to light", "dizziness"],
+      "Anxiety": ["chest pain", "shortness of breath", "dizziness", "fatigue"],
+      "Gastritis": ["nausea", "stomach pain", "bloating", "loss of appetite"]
+    };
+
+    function addMessage(content, type = "bot") {
+      const msg = document.createElement('div');
+      msg.className = `message ${type}`;
+      msg.innerText = content;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      addMessage(text, "user");
+      input.value = "";
+
+      showTyping();
+
+      fetch('/chatbot-analyze', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({ message: text })
+})
+.then(res => res.json())
+.then(data => {
+  hideTyping();
+  addMessage(data.reply, "bot");
+});
+
+    }
+
+    function analyzeSymptoms(text) {
+      const userSymptoms = text.toLowerCase().split(/[\s,]+/).filter(word => word.length > 2);
+      let bestMatch = { disease: "Unknown", confidence: 0 };
+
+      for (const [disease, symptoms] of Object.entries(diseaseData)) {
+        const matches = userSymptoms.filter(s =>
+          symptoms.some(ds => ds.includes(s) || s.includes(ds))
+        );
+        const confidence = matches.length / symptoms.length;
+        if (confidence > bestMatch.confidence) {
+          bestMatch = { disease, confidence };
+        }
+      }
+
+      return `Based on your symptoms, you might have: **${bestMatch.disease}** (${Math.round(bestMatch.confidence * 100)}% confidence).\n\n` +
+             `Recommendations:\n- Rest and stay hydrated\n- Monitor your symptoms\n- Consult a doctor if symptoms worsen\n\n*This is not a medical diagnosis.*`;
+    }
+
+    function showTyping() {
+      const typing = document.createElement('div');
+      typing.className = 'typing-indicator';
+      typing.id = 'typing';
+      typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+      chatBox.appendChild(typing);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function hideTyping() {
+      const typing = document.getElementById('typing');
+      if (typing) typing.remove();
+    }
+
+    // Load quick symptoms
+    const buttonsDiv = document.getElementById('symptom-buttons');
+    symptomsList.forEach(symptom => {
+      const btn = document.createElement('button');
+      btn.textContent = symptom;
+      btn.onclick = () => {
+        input.value = input.value ? input.value + ', ' + symptom : symptom;
+      };
+      buttonsDiv.appendChild(btn);
+    });
+  </script>
+
+</body>
+</html>

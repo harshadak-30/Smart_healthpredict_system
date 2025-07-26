@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ disease }} Prediction Result</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-5 text-center">
+        <h2>{{ disease }} Prediction Result</h2>
+        <p class="lead">
+    {% if prediction == 1 %}
+        <span class="text-danger">Positive</span> - You may have {{ disease }}.
+        <div class="alert alert-warning mt-4">
+            <h5>Health Suggestion:</h5>
+            <p>{{ suggestion }}</p>
+        </div>
+    {% else %}
+        <span class="text-success">Negative</span> - You are likely healthy.
+    {% endif %}
+</p>
+        <a href="/" class="btn btn-secondary mt-3">Go Home</a>
+    </div>
+</body>
+</html>

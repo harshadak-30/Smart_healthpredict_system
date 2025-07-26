@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ disease }} Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <h2 class="text-center mb-4">{{ disease }} Prediction</h2>
+        {% if error %}
+            <div class="alert alert-danger text-center">{{ error }}</div>
+        {% endif %}
+        <form method="post" action="" class="row g-3">
+            {% for col in columns %}
+            <div class="col-md-4">
+                {% if col == "Gender" %}
+                    <select name="Gender" class="form-control" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                {% else %}
+                    <input type="number" step="any" name="{{ col }}" class="form-control" placeholder="{{ col }}" required>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <div class="col-12 text-center">
+                <button type="submit" class="btn btn-primary">Predict</button>
+            </div>
+        </form>
+        <div class="text-center mt-4">
+            <a href="/diabetes">Diabetes</a> | 
+            <a href="/heart">Heart Disease</a> | 
+            <a href="/chatbot">Symptom Chatbot</a> |
+            <a href="/liver">Liver Diseases</a> |
+            <a href="/cancer">Breast Cancer</a> |
+            <a href="/stroke">Stroke Prediction</a> |
+        </div>
+    </div>
+</body>
+</html>

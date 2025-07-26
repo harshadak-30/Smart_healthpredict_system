@@ -1,0 +1,18 @@
+<!-- templates/predict_heart.html -->
+<!DOCTYPE html>
+<html>
+<head><title>Heart Disease Prediction</title></head>
+<body>
+    <h2>Enter Heart Health Parameters</h2>
+    <form method="post">
+        {% for field in ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
+                         'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal'] %}
+            <label>{{ field }}:</label><input type="text" name="{{ field }}"><br>
+        {% endfor %}
+        <button type="submit">Predict</button>
+    </form>
+    {% if prediction %}
+        <h3>Prediction: {{ prediction }}</h3>
+    {% endif %}
+</body>
+</html>

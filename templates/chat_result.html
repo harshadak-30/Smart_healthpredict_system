@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><title>Chatbot Result</title></head>
+<body>
+  <h3>Predicted Disease: {{ disease }}</h3>
+  <h4>Suggestions:</h4>
+  <ul>
+    {% for tip in tips %}
+      <li>{{ tip }}</li>
+    {% endfor %}
+  </ul>
+  <a href="/chatbot">Back</a>
+</body>
+</html>
