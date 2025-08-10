@@ -2,8 +2,20 @@ from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import numpy as np
 import joblib
+import os
 
 app = Flask(__name__)
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///health_predictions.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+from models import db, PredictionEntry
+
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
 
 # ---------- Load Symptom DataFrame Globally ----------
 try:
@@ -15,7 +27,14 @@ except Exception as e:
 # ---------- Home Page ----------
 @app.route('/')
 def home():
-    return render_template('index.html')
+    entries = PredictionEntry.query.order_by(PredictionEntry.timestamp.desc()).all()
+    return render_template('index.html', entries=entries)
+
+@app.route('/dashboard')
+def dashboard():
+    entries = PredictionEntry.query.order_by(PredictionEntry.timestamp.desc()).all()
+    return render_template('dashboard.html', entries=entries)
+
 
 # ---------- Diabetes Prediction ----------
 DIABETES_COLS = [
@@ -26,14 +45,20 @@ DIABETES_COLS = [
 @app.route('/diabetes', methods=['GET', 'POST'])
 def diabetes():
     if request.method == 'POST':
+        username = request.form.get('username', 'Anonymous')
+        age = request.form.get('Age', 0)
         features = [float(request.form.get(col)) for col in DIABETES_COLS]
         model = joblib.load('models/diabetes_model.pkl')
         prediction = model.predict([features])[0]
         suggestion = ""
         if prediction == 1:
             suggestion = "Maintain a low-sugar diet, exercise regularly, avoid stress, and monitor glucose levels. Consult a doctor for further treatment."
+        # Save to database
+        entry = PredictionEntry(username=username, age=age, disease='Diabetes', prediction=str(prediction))
+        db.session.add(entry)
+        db.session.commit()
         return render_template('result.html', disease='Diabetes', prediction=prediction, suggestion=suggestion)
-    return render_template('form.html', disease='Diabetes', columns=DIABETES_COLS)
+    return render_template('form.html', disease='Diabetes', columns=['username'] + DIABETES_COLS)
 
 # ---------- Heart Disease Prediction ----------
 HEART_COLS = [
@@ -44,14 +69,20 @@ HEART_COLS = [
 @app.route('/heart', methods=['GET', 'POST'])
 def heart():
     if request.method == 'POST':
+        username = request.form.get('username', 'Anonymous')
+        age = request.form.get('age', 0)
         features = [float(request.form.get(col)) for col in HEART_COLS]
         model = joblib.load('models/heart_model.pkl')
         prediction = model.predict([features])[0]
         suggestion = ""
         if prediction == 1:
             suggestion = "Follow a heart-healthy diet, reduce salt, quit smoking, and get regular checkups. Consult a cardiologist."
+        # Save to database
+        entry = PredictionEntry(username=username, age=age, disease='Heart Disease', prediction=str(prediction))
+        db.session.add(entry)
+        db.session.commit()
         return render_template('result.html', disease='Heart Disease', prediction=prediction, suggestion=suggestion)
-    return render_template('form.html', disease='Heart Disease', columns=HEART_COLS)
+    return render_template('form.html', disease='Heart Disease', columns=['username', 'age'] + HEART_COLS)
 
 # ---------- Chatbot Symptom Checker ----------
 # Route to render chatbot UI
@@ -123,6 +154,8 @@ LIVER_COLS = [
 def liver():
     if request.method == 'POST':
         try:
+            username = request.form.get('username', 'Anonymous')
+            age = request.form.get('Age', 0)
             data = []
             for col in LIVER_COLS:
                 value = request.form.get(col)
@@ -136,10 +169,14 @@ def liver():
                 suggestion = "Abnormal liver detected. Please consult a hepatologist. Avoid alcohol, take a liver-friendly diet, and get regular checkups."
             else:
                 suggestion = "Your liver seems to be functioning normally. Maintain a healthy lifestyle."
+            # Save to database
+            entry = PredictionEntry(username=username, age=age, disease='Liver Disease', prediction=str(prediction))
+            db.session.add(entry)
+            db.session.commit()
             return render_template('result.html', disease='Liver Disease', prediction=prediction, suggestion=suggestion)
         except Exception as e:
             return f"Error during prediction: {e}"
-    return render_template('form.html', disease='Liver Disease', columns=LIVER_COLS)
+    return render_template('form.html', disease='Liver Disease', columns=['username'] + LIVER_COLS)
  
 #----stroke ----
 STROKE_COLS = [
@@ -161,32 +198,27 @@ def stroke():
             ever_married = 1 if form.get('ever_married').lower() == 'yes' else 0
             work_type_map = {'private': 0, 'self-employed': 1, 'govt_job': 2, 'children': 3, 'never_worked': 4}
             work_type = work_type_map.get(form.get('work_type').lower(), 0)
-            residence_type = 1 if form.get('Residence_type').lower() == 'urban' else 0
+            residence_type = 0 if form.get('Residence_type').lower() == 'urban' else 1
             avg_glucose_level = float(form.get('avg_glucose_level'))
             bmi = float(form.get('bmi'))
-            smoking_map = {'formerly smoked': 0, 'never smoked': 1, 'smokes': 2, 'unknown': 3}
-            smoking_status = smoking_map.get(form.get('smoking_status').lower(), 3)
-
-            input_data = [
-                gender, age, hypertension, heart_disease, ever_married,
-                work_type, residence_type, avg_glucose_level, bmi, smoking_status
-            ]
-
-            import pandas as pd
-            input_df = pd.DataFrame([input_data], columns=STROKE_COLS)
+            smoking_status_map = {'never smoked': 0, 'formerly smoked': 1, 'smokes': 2, 'unknown': 3}
+            smoking_status = smoking_status_map.get(form.get('smoking_status').lower(), 3)
+            features = [gender, age_val, hypertension, heart_disease, ever_married, work_type, residence_type, avg_glucose_level, bmi, smoking_status]
             model = joblib.load('models/stroke_model.pkl')
-            prediction = model.predict(input_df)[0]
-
+            prediction = model.predict([features])[0]
             suggestion = ""
             if prediction == 1:
                 suggestion = "High risk of stroke. Please consult a neurologist immediately. Control blood pressure, maintain a healthy diet, and exercise."
             else:
                 suggestion = "Low risk of stroke. Keep up a healthy lifestyle and regular check-ups."
-
+            # Save to database
+            entry = PredictionEntry(username=username, age=age, disease='Stroke', prediction=str(prediction))
+            db.session.add(entry)
+            db.session.commit()
             return render_template('result.html', disease='Stroke Prediction', prediction=prediction, suggestion=suggestion)
         except Exception as e:
             return f"Error during prediction: {e}"
-    return render_template('form.html', disease='Stroke Prediction', columns=STROKE_COLS)
+    return render_template('form.html', disease='Stroke Prediction', columns=['username', 'age'] + STROKE_COLS)
 
 # ------breast cancer ----
 CANCER_COLS = [
@@ -200,6 +232,8 @@ CANCER_COLS = [
 def cancer():
     if request.method == 'POST':
         try:
+            username = request.form.get('username', 'Anonymous')
+            age = request.form.get('radius_mean', 0)  # No direct age field, fallback to 0
             data = [float(request.form[col]) for col in CANCER_COLS]
             model = joblib.load('models/breast_model.pkl')
             prediction = model.predict([data])[0]
@@ -208,10 +242,14 @@ def cancer():
                 if prediction == 1 else
                 "Likely benign tumor. Continue regular checkups."
             )
+            # Save to database
+            entry = PredictionEntry(username=username, age=age, disease='Breast Cancer', prediction=str(prediction))
+            db.session.add(entry)
+            db.session.commit()
             return render_template('result.html', disease='Breast Cancer', prediction=prediction, suggestion=suggestion)
         except Exception as e:
             return f"Error during prediction: {e}"
-    return render_template('form.html', disease='Breast Cancer', columns=CANCER_COLS)
+    return render_template('form.html', disease='Breast Cancer', columns=['username'] + CANCER_COLS)
 
 
 # Route to receive AJAX request from chatbot and respond
@@ -240,5 +278,7 @@ def chatbot_analyze():
 
 
 # ---------- Run App ----------
-if __name__ == '__main__':
-    app.run(debug=True)
+
+if __name__ == "__main__":
+    port = int(os.environ.get('PORT', 10000))  # default port for Render
+    app.run(host='0.0.0.0', port=port)
