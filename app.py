@@ -278,13 +278,7 @@ def chatbot_analyze():
 
 
 # ---------- Run App ----------
-<<<<<<< HEAD
+if __name__ == "__main__":
+    port = int(os.environ.get('PORT', 10000))  # default port for Render
+    app.run(host='0.0.0.0', port=port)
 
-if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 10000))  # default port for Render
-    app.run(host='0.0.0.0', port=port)
-=======
-if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 10000))  # default port for Render
-    app.run(host='0.0.0.0', port=port)
->>>>>>> 0a3a4caa212ac4985e9ba4c37c8c65df1d918dc1
