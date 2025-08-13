@@ -17,14 +17,14 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-# ---------- Load Symptom DataFrame Globally ----------
+
 try:
     df = pd.read_csv('dataset/symptom_disease.csv')
 except Exception as e:
     print(f"[ERROR] Could not load symptom_disease.csv: {e}")
     df = None
 
-# ---------- Home Page ----------
+
 @app.route('/')
 def home():
     entries = PredictionEntry.query.order_by(PredictionEntry.timestamp.desc()).all()
@@ -36,7 +36,7 @@ def dashboard():
     return render_template('dashboard.html', entries=entries)
 
 
-# ---------- Diabetes Prediction ----------
+
 DIABETES_COLS = [
     'Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness',
     'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age'
@@ -53,14 +53,13 @@ def diabetes():
         suggestion = ""
         if prediction == 1:
             suggestion = "Maintain a low-sugar diet, exercise regularly, avoid stress, and monitor glucose levels. Consult a doctor for further treatment."
-        # Save to database
+       
         entry = PredictionEntry(username=username, age=age, disease='Diabetes', prediction=str(prediction))
         db.session.add(entry)
         db.session.commit()
         return render_template('result.html', disease='Diabetes', prediction=prediction, suggestion=suggestion)
     return render_template('form.html', disease='Diabetes', columns=['username'] + DIABETES_COLS)
 
-# ---------- Heart Disease Prediction ----------
 HEART_COLS = [
     'age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
     'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal'
@@ -84,13 +83,12 @@ def heart():
         return render_template('result.html', disease='Heart Disease', prediction=prediction, suggestion=suggestion)
     return render_template('form.html', disease='Heart Disease', columns=['username', 'age'] + HEART_COLS)
 
-# ---------- Chatbot Symptom Checker ----------
-# Route to render chatbot UI
+
 @app.route('/chatbot')
 def chatbot():
     return render_template('chatbot.html')
 
-# Function to analyze symptoms
+
 def get_symptom_weights(user_input):
     global df
     try:
@@ -102,8 +100,7 @@ def get_symptom_weights(user_input):
             return "Symptom database not available. Please contact admin."
 
         print('DEBUG: user_input:', user_input)
-        # Clean input: split by comma, strip spaces, convert to lowercase
-        # Validate user input
+        
         if not user_input.strip():
             return "Please enter symptoms first."
         input_symptoms = [sym.strip().lower() for sym in user_input.split(',') if sym.strip()]
@@ -111,24 +108,24 @@ def get_symptom_weights(user_input):
         if not input_symptoms:
             return "Please enter symptoms first."
 
-        # Normalize column
+      
         df['Symptom'] = df['Symptom'].astype(str).str.strip().str.lower()
 
-        # Match user symptoms
+     
         matched = df[df['Symptom'].isin(input_symptoms)]
         print('DEBUG: matched shape:', matched.shape)
         print('DEBUG: matched head:', matched.head())
 
-        # If no match
+       
         if matched.empty:
             return "Sorry, none of the symptoms were recognized. Please try again."
 
-        # Prepare response
+        
         response = "Here's a quick assessment based on your symptoms:\n\n"
         for _, row in matched.iterrows():
             response += f"- {row['Symptom'].title()}: Severity {row['weight']}\n"
 
-        # Suggestions
+     
         tips = [
             "Stay hydrated.",
             "Get adequate rest.",
@@ -143,7 +140,7 @@ def get_symptom_weights(user_input):
         print("Error in get_symptom_weights:", traceback.format_exc())
         return "Server error while analyzing symptoms."
 
-# ---------- Liver Disease Prediction ----------
+
 LIVER_COLS = [
     'Age', 'Gender', 'Total_Bilirubin', 'Direct_Bilirubin',
     'Alkaline_Phosphotase', 'Alamine_Aminotransferase', 'Aspartate_Aminotransferase',
@@ -169,7 +166,7 @@ def liver():
                 suggestion = "Abnormal liver detected. Please consult a hepatologist. Avoid alcohol, take a liver-friendly diet, and get regular checkups."
             else:
                 suggestion = "Your liver seems to be functioning normally. Maintain a healthy lifestyle."
-            # Save to database
+          
             entry = PredictionEntry(username=username, age=age, disease='Liver Disease', prediction=str(prediction))
             db.session.add(entry)
             db.session.commit()
@@ -178,7 +175,7 @@ def liver():
             return f"Error during prediction: {e}"
     return render_template('form.html', disease='Liver Disease', columns=['username'] + LIVER_COLS)
  
-#----stroke ----
+
 STROKE_COLS = [
     'gender', 'age', 'hypertension', 'heart_disease',
     'ever_married', 'work_type', 'Residence_type',
@@ -189,7 +186,6 @@ STROKE_COLS = [
 def stroke():
     if request.method == 'POST':
         try:
-            # Encode and prepare data
             form = request.form
             gender = 1 if form.get('gender').lower() == 'male' else 0
             age = float(form.get('age'))
@@ -211,7 +207,7 @@ def stroke():
                 suggestion = "High risk of stroke. Please consult a neurologist immediately. Control blood pressure, maintain a healthy diet, and exercise."
             else:
                 suggestion = "Low risk of stroke. Keep up a healthy lifestyle and regular check-ups."
-            # Save to database
+          
             entry = PredictionEntry(username=username, age=age, disease='Stroke', prediction=str(prediction))
             db.session.add(entry)
             db.session.commit()
@@ -220,7 +216,7 @@ def stroke():
             return f"Error during prediction: {e}"
     return render_template('form.html', disease='Stroke Prediction', columns=['username', 'age'] + STROKE_COLS)
 
-# ------breast cancer ----
+
 CANCER_COLS = [
     'radius_mean', 'texture_mean', 'perimeter_mean',
     'area_mean', 'concavity_mean', 'concave points_mean',
@@ -233,7 +229,7 @@ def cancer():
     if request.method == 'POST':
         try:
             username = request.form.get('username', 'Anonymous')
-            age = request.form.get('radius_mean', 0)  # No direct age field, fallback to 0
+            age = request.form.get('radius_mean', 0)  
             data = [float(request.form[col]) for col in CANCER_COLS]
             model = joblib.load('models/breast_model.pkl')
             prediction = model.predict([data])[0]
@@ -242,7 +238,7 @@ def cancer():
                 if prediction == 1 else
                 "Likely benign tumor. Continue regular checkups."
             )
-            # Save to database
+           
             entry = PredictionEntry(username=username, age=age, disease='Breast Cancer', prediction=str(prediction))
             db.session.add(entry)
             db.session.commit()
@@ -252,11 +248,11 @@ def cancer():
     return render_template('form.html', disease='Breast Cancer', columns=['username'] + CANCER_COLS)
 
 
-# Route to receive AJAX request from chatbot and respond
+
 @app.route('/chatbot-analyze', methods=['POST', 'GET'])
 def chatbot_analyze():
     try:
-        # Try to get user input from JSON, then form, then args
+        
         user_input = ''
         if request.is_json:
             data = request.get_json()
@@ -277,8 +273,8 @@ def chatbot_analyze():
         return jsonify({'reply': "Internal server error."})
 
 
-# ---------- Run App ----------
+
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 10000))  # default port for Render
+    port = int(os.environ.get('PORT', 10000)) 
     app.run(host='0.0.0.0', port=port)
 
